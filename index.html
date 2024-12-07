@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encrypt & Decrypt App</title>
+    <style>
+        /* Page styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('2.jpg'); /* Replace with your image URL */
+            background-size: cover; /* Ensure the image covers the whole page */
+            background-position: center; /* Center the background image */
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            resize: none;
+            font-size: 14px;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            color: #ecf0f1;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .encrypt-btn {
+            background-color: #e74c3c;
+        }
+
+        .decrypt-btn {
+            background-color: #27ae60;
+        }
+
+        .reset-btn {
+            background-color: #2980b9;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s;
+        }
+
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #ecf0f1;
+            font-size: 24px;
+        }
+
+        .close-btn {
+            background: #e74c3c;
+            color: #ecf0f1;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.0.0-rc.3/jsencrypt.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Encrypt & Decrypt App</h1>
+    <textarea id="message" placeholder="Enter your message here"></textarea>
+    <input type="password" id="password" placeholder="Enter secret key">
+    
+    <select id="method">
+        <option value="aes">AES</option>
+        <option value="des">DES</option>
+        <option value="rsa">RSA</option>
+    </select>
+    
+    <button class="encrypt-btn" onclick="encrypt()">Encrypt</button>
+    <button class="decrypt-btn" onclick="decrypt()">Decrypt</button>
+    <button class="reset-btn" onclick="resetFields()">Reset</button>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <div id="modal-text"></div>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+    const secretKey = "1234"; // Secret key
+
+    function encrypt() {
+        const message = document.getElementById("message").value;
+        const password = document.getElementById("password").value;
+        const method = document.getElementById("method").value;
+
+        if (password === secretKey) {
+            let encryptedMessage = "";
+            switch (method) {
+                case "aes":
+                    encryptedMessage = CryptoJS.AES.encrypt(message, password).toString();
+                    break;
+                case "des":
+                    encryptedMessage = CryptoJS.DES.encrypt(message, password).toString();
+                    break;
+                case "rsa":
+                    const rsa = new JSEncrypt();
+                    rsa.setPublicKey('-----BEGIN PUBLIC KEY-----<your-public-key>-----END PUBLIC KEY-----');
+                    encryptedMessage = rsa.encrypt(message);
+                    break;
+                default:
+                    alert("Invalid method selected!");
+                    return;
+            }
+            showModal("Encrypted Message: " + encryptedMessage);
+        } else if (password === "") {
+            alert("Please enter the secret key.");
+        } else {
+            alert("Invalid secret key!");
+        }
+    }
+
+    function decrypt() {
+        const message = document.getElementById("message").value;
+        const password = document.getElementById("password").value;
+        const method = document.getElementById("method").value;
+
+        if (password === secretKey) {
+            let decryptedMessage = "";
+            try {
+                switch (method) {
+                    case "aes":
+                        decryptedMessage = CryptoJS.AES.decrypt(message, password).toString(CryptoJS.enc.Utf8);
+                        break;
+                    case "des":
+                        decryptedMessage = CryptoJS.DES.decrypt(message, password).toString(CryptoJS.enc.Utf8);
+                        break;
+                    case "rsa":
+                        const rsa = new JSEncrypt();
+                        rsa.setPrivateKey('-----BEGIN PRIVATE KEY-----<your-private-key>-----END PRIVATE KEY-----');
+                        decryptedMessage = rsa.decrypt(message);
+                        break;
+                    default:
+                        alert("Invalid method selected!");
+                        return;
+                }
+                showModal("Decrypted Message: " + decryptedMessage);
+            } catch (e) {
+                alert("Invalid encrypted message.");
+            }
+        } else if (password === "") {
+            alert("Please enter the secret key.");
+        } else {
+            alert("Invalid secret key!");
+        }
+    }
+
+    function resetFields() {
+        document.getElementById("message").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("method").value = "aes";
+        alert("Fields have been reset.");
+    }
+
+    function showModal(message) {
+        const modal = document.getElementById("modal");
+        const modalText = document.getElementById("modal-text");
+        modalText.innerText = message;
+        modal.classList.add("active");
+    }
+
+    function closeModal() {
+        const modal = document.getElementById("modal");
+        modal.classList.remove("active");
+    }
+</script>
+
+</body>
+</html>
